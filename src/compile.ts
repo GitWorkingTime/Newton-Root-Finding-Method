@@ -2,56 +2,63 @@ import * as math from "mathjs";
 import { rootFinding, tangentLine } from "./newtons_method";
 import {Chart, registerables} from 'chart.js'
 
-const expr = math.parse('x^2-2');
-const compiled = expr.compile();
-
-const tangent = tangentLine(1, expr);
-const tangentExpr = math.parse(tangent);
-const compiledTan = tangentExpr.compile();
-
+// Axes:
 const step = 0.1;
-const minX = -2;
-const maxX = 2;
+const minX = -Math.PI;
+const maxX = Math.PI;
 const minY = -3;
 const maxY = 5;
 
-let points: {x : number, y: number}[] = [];
-let tanPoints: {x: number, y: number}[] = [];
+// Function Expressions:
+const expr = math.parse('cos(x)+sin(x)');
 
-for(let x = minX; x <= maxX; x += step) {
-    let y = compiled.evaluate({x});
-    let tanY = compiledTan.evaluate({x});
-    if (typeof y === 'number' && isFinite(y)) {
-        points.push({x, y});
-    }
-    if (typeof tanY === 'number' && isFinite(y)) {
-        tanPoints.push({x, y: tanY});
+// String ver.
+const tangent = tangentLine(3, expr);
+const tangentExpr = math.parse(tangent);
+
+// Compiled
+const compiled = expr.compile();
+const compiledTan = tangentExpr.compile();
+
+// Points:
+interface coords {
+    x: number,
+    y: number,
+};
+
+let points: coords[] = [];
+let tanPoints: coords[] = [];
+const roots: coords[] = [];
+const tanRoots: coords[] = [];
+
+// Calculate Points
+function calcPoints(min: number, max: number, step: number, points: coords[], expr: math.EvalFunction): void {
+    for(let x = min; x <= max; x += step) {
+        let y = expr.evaluate({x});
+        if (typeof y === 'number' && isFinite(y)) {
+            points.push({x, y});
+        }
     }
 }
 
-const roots: { x: number; y: number }[] = [];
-const tanRoots: {x: number; y: number}[] = [];
-for (let i = 1; i < points.length; i++) {
-    const prev = points[i - 1];
-    const curr = points[i];
-    if (prev.y * curr.y < 0) {
-        // Sign changed — interpolate to estimate where y = 0
-        const t = -prev.y / (curr.y - prev.y);
-        const xAtZero = prev.x + t * (curr.x - prev.x);
-        roots.push({ x: xAtZero, y: 0 });
+calcPoints(minX, maxX, step, points, compiled);
+calcPoints(minX, maxX, step, tanPoints, compiledTan);
+
+function calcRoots(points: coords[], rootBuf: coords[]): void {
+    for (let i = 1; i < points.length; i++) {
+        const prev = points[i - 1];
+        const curr = points[i];
+        if (prev.y * curr.y < 0) {
+            // Sign changed — interpolate to estimate where y = 0
+            const t = -prev.y / (curr.y - prev.y);
+            const xAtZero = prev.x + t * (curr.x - prev.x);
+            rootBuf.push({ x: xAtZero, y: 0 });
+        }
     }
 }
 
-for (let i = 1; i < tanPoints.length; i++) {
-    const prev = tanPoints[i - 1];
-    const curr = tanPoints[i];
-    if (prev.y * curr.y < 0) {
-        // Sign changed — interpolate to estimate where y = 0
-        const t = -prev.y / (curr.y - prev.y);
-        const xAtZero = prev.x + t * (curr.x - prev.x);
-        tanRoots.push({ x: xAtZero, y: 0 });
-    }
-}
+calcRoots(points, roots);
+calcRoots(tanPoints, tanRoots);
 
 Chart.register(...registerables);
 
