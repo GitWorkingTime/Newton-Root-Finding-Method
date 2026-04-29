@@ -5,15 +5,11 @@ Newton's method of Root finding is a recursive function that uses the following 
 
 x_(n+1) = x_n - (f(x_n))/(f'(x_n))
 */
-interface xCoord {
+export interface xCoord {
     x: number;
 };
 
-// For now, let's use a predefined polynomial
-let expr: string = 'e^x - 2';
-let f = parse(expr);
-
-function rootFinding(x: xCoord, iterations: number, expr: MathNode): number {
+export function rootFinding(x: xCoord, iterations: number, expr: MathNode): number {
     if (iterations <= 0) {
         return x.x;
     } else {
@@ -25,7 +21,3 @@ function rootFinding(x: xCoord, iterations: number, expr: MathNode): number {
         return rootFinding(newX, iterations - 1, expr);
     }
 }
-
-let val: xCoord = {x: 1};
-
-console.log(rootFinding(val, 5, f));
