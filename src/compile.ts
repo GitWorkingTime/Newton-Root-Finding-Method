@@ -10,15 +10,14 @@ const minY = -3;
 const maxY = 5;
 
 // Function Expressions:
-const expr = math.parse('cos(x)+sin(x)');
+const expr = math.parse('e^x - 2');
 
-// String ver.
-const tangent = tangentLine(3, expr);
-const tangentExpr = math.parse(tangent);
+// For Root finding:
+const iterations = 3;
 
 // Compiled
 const compiled = expr.compile();
-const compiledTan = tangentExpr.compile();
+
 
 // Points:
 interface coords {
@@ -42,7 +41,6 @@ function calcPoints(min: number, max: number, step: number, points: coords[], ex
 }
 
 calcPoints(minX, maxX, step, points, compiled);
-calcPoints(minX, maxX, step, tanPoints, compiledTan);
 
 function calcRoots(points: coords[], rootBuf: coords[]): void {
     for (let i = 1; i < points.length; i++) {
@@ -58,6 +56,23 @@ function calcRoots(points: coords[], rootBuf: coords[]): void {
 }
 
 calcRoots(points, roots);
+
+function calcTangent(startingPoint: number, iterations: number, expr: math.MathNode) {
+    let tangent: string = '';
+    if (iterations <= 1) {
+        tangent = tangentLine(startingPoint, expr);
+    } else {
+        const nextStartingPoint = rootFinding(startingPoint, iterations - 1, expr);
+        tangent = tangentLine(nextStartingPoint, expr);
+    }
+
+    const expression = math.parse(tangent);
+    return expression
+}
+
+const tangent = calcTangent(3, iterations, expr);
+const compiledTangent = tangent.compile();
+calcPoints(minX, maxX, step, tanPoints, compiledTangent);
 calcRoots(tanPoints, tanRoots);
 
 Chart.register(...registerables);
